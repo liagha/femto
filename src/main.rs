@@ -1,7 +1,7 @@
 use femto_gpt::gpt::{TrainingState, GPT};
 use femto_gpt::graph::GraphError;
 use femto_gpt::optimizer::AdamW;
-use femto_gpt::tokenizer::{SimpleTokenizer, Tokenizer};
+use femto_gpt::tokenizer::{SentencePieceTokenizer, Tokenizer};
 use std::fs;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -65,7 +65,7 @@ fn main() -> Result<(), GraphError> {
             // Create a unique char-to-int mapping for all unique characters inside our dataset
             let dataset_char = fs::read_to_string(tokenizer_dataset)
                 .expect("Should have been able to read the file");
-            let tokenizer = SimpleTokenizer::new(&dataset_char);
+            let tokenizer = SentencePieceTokenizer::load(&dataset_char).unwrap();
 
             assert_eq!(num_heads * head_size, embedding_degree);
 
@@ -115,7 +115,7 @@ fn main() -> Result<(), GraphError> {
             // Create a unique char-to-int mapping for all unique characters inside our dataset
             let dataset_char =
                 fs::read_to_string(dataset).expect("Should have been able to read the file");
-            let tokenizer = SimpleTokenizer::new(&dataset_char);
+            let tokenizer = SentencePieceTokenizer::load(&dataset_char).unwrap();
 
             let dataset = tokenizer.tokenize(&dataset_char);
 

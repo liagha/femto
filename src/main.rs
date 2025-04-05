@@ -63,9 +63,9 @@ fn main() -> Result<(), GraphError> {
             let mut rng = rand::thread_rng();
 
             // Create a unique char-to-int mapping for all unique characters inside our dataset
-            let dataset_char = fs::read_to_string(tokenizer_dataset)
+            let dataset_char = fs::read_to_string(tokenizer_dataset.clone())
                 .expect("Should have been able to read the file");
-            let tokenizer = SentencePieceTokenizer::load(&dataset_char).unwrap();
+            let tokenizer = SentencePieceTokenizer::load(&tokenizer_dataset).unwrap();
 
             assert_eq!(num_heads * head_size, embedding_degree);
 
@@ -114,8 +114,8 @@ fn main() -> Result<(), GraphError> {
 
             // Create a unique char-to-int mapping for all unique characters inside our dataset
             let dataset_char =
-                fs::read_to_string(dataset).expect("Should have been able to read the file");
-            let tokenizer = SentencePieceTokenizer::load(&dataset_char).unwrap();
+                fs::read_to_string(dataset.clone()).expect("Should have been able to read the file");
+            let tokenizer = SentencePieceTokenizer::load(&dataset).unwrap();
 
             let dataset = tokenizer.tokenize(&dataset_char);
 

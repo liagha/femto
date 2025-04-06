@@ -5,6 +5,7 @@ use femto_gpt::tokenizer::{SentencePieceTokenizer, Tokenizer};
 use std::fs;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -12,12 +13,16 @@ enum Cli {
     Train {
         #[structopt(long, default_value = "dataset.txt")]
         dataset: PathBuf,
+        #[structopt(long, default_value = "vocab_file.vocab")]
+        vocab: PathBuf,
         #[structopt(long, default_value = "training_state.dat")]
         model: PathBuf,
     },
     Infer {
         #[structopt(long, default_value = "dataset.txt")]
         tokenizer_dataset: PathBuf,
+        #[structopt(long, default_value = "vocab_file.vocab")]
+        vocab: PathBuf,
         #[structopt(long, default_value = "training_state.dat")]
         model: PathBuf,
         #[structopt(long)]
@@ -52,7 +57,8 @@ fn main() -> Result<(), GraphError> {
     let cli = Cli::from_args();
     match cli {
         Cli::Infer {
-            tokenizer_dataset,
+            tokenizer_dataset: _tokenizer_dataset,
+            vocab,
             model,
             prompt,
             count,
@@ -63,9 +69,10 @@ fn main() -> Result<(), GraphError> {
             let mut rng = rand::thread_rng();
 
             // Create a unique char-to-int mapping for all unique characters inside our dataset
-            let dataset_char = fs::read_to_string(tokenizer_dataset.clone())
-                .expect("Should have been able to read the file");
-            let tokenizer = SentencePieceTokenizer::load(&tokenizer_dataset).unwrap();
+            //let dataset_char = fs::read_to_string(tokenizer_dataset.clone())
+                //.expect("Should have been able to read the file");
+            // Use the vocab file for the tokenizer instead of the dataset
+            let tokenizer = SentencePieceTokenizer::load(&vocab).unwrap();
 
             assert_eq!(num_heads * head_size, embedding_degree);
 
@@ -107,7 +114,7 @@ fn main() -> Result<(), GraphError> {
 
             Ok(())
         }
-        Cli::Train { dataset, model } => {
+        Cli::Train { vocab, dataset, model } => {
             let training_state_path = &model.clone();
 
             let mut rng = rand::thread_rng();
@@ -115,7 +122,7 @@ fn main() -> Result<(), GraphError> {
             // Create a unique char-to-int mapping for all unique characters inside our dataset
             let dataset_char =
                 fs::read_to_string(dataset.clone()).expect("Should have been able to read the file");
-            let tokenizer = SentencePieceTokenizer::load(&dataset).unwrap();
+            let tokenizer = SentencePieceTokenizer::load(&vocab).unwrap();
 
             let dataset = tokenizer.tokenize(&dataset_char);
 
@@ -171,7 +178,7 @@ fn main() -> Result<(), GraphError> {
                         min_lr,
                         base_lr
                             - (base_lr - min_lr) * (step - warmup_steps) as f32
-                                / decay_steps as f32,
+                            / decay_steps as f32,
                     )
                 }
             };
